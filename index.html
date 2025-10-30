@@ -288,13 +288,13 @@
              text-shadow: none;
              font-size: 1.2rem;
         }
-        /* Percentual de Ganho - NOVO DESTAQUE E CENTRALIZAÇÃO */
+        /* Percentual de Ganho - DESTAQUE MÁXIMO */
         .card--daily-gain ul li.percentage-row {
-            padding: 20px 0 10px 0; /* Mais padding vertical */
+            padding: 20px 0 10px 0;
             background-color: transparent;
             border-bottom: none;
-            display: block; /* Ocupa a largura total */
-            text-align: center; /* Centraliza o conteúdo */
+            display: block; 
+            text-align: center;
         }
         .card--daily-gain ul li.percentage-row span.label {
             font-size: 1rem;
@@ -303,10 +303,10 @@
             margin-bottom: 5px;
         }
         .card--daily-gain ul li.percentage-row span.value {
-            font-size: 2.2rem; /* MAIOR DESTAQUE */
+            font-size: 2.2rem; 
             color: var(--green-color);
             text-shadow: 0 0 15px var(--shadow-color-green);
-            font-weight: 800; /* Mais negrito */
+            font-weight: 800;
             display: block;
         }
 
@@ -319,6 +319,7 @@
             margin-top: 30px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
             border: 1px solid var(--primary-color);
+            overflow-x: auto; /* Garante que a rolagem esteja disponível como fallback, mas tentaremos evitar. */
         }
         
         .table-container-title {
@@ -332,6 +333,7 @@
             border-collapse: separate;
             border-spacing: 0;
             width: 100%;
+            /* min-width removido para forçar o ajuste */
         }
 
         th, td {
@@ -339,7 +341,15 @@
             text-align: left;
             border-bottom: 1px solid #ffffff1a;
             font-size: 0.95rem;
+            white-space: nowrap; /* Impede a quebra de linha nas células */
         }
+        
+        /* Otimização de largura de Colunas da Tabela (Desktop/Tablet) */
+        .table-container table thead th:nth-child(1) { width: 20%; } /* Data */
+        .table-container table thead th:nth-child(2) { width: 25%; } /* Ganho do Dia */
+        .table-container table thead th:nth-child(3) { width: 30%; } /* Acumulado */
+        .table-container table thead th:nth-child(4) { width: 25%; } /* Ganho % */
+
 
         thead th {
             background-color: #2a2a44;
@@ -366,65 +376,59 @@
             font-weight: 600;
         }
         
-        /* --- OTIMIZAÇÃO MOBILE (Media Query) --- */
+        /* --- OTIMIZAÇÃO MOBILE EXTREMA (Media Query) --- */
         @media (max-width: 600px) {
             body { padding: 10px; }
             .header h1 { font-size: 2rem; }
             .section-title { font-size: 1.6rem; margin: 40px 0 20px 0; }
             .card { padding: 15px; }
+            th, td { padding: 8px 5px; font-size: 0.8rem; } /* REDUÇÃO MÁXIMA DE ESPAÇAMENTO */
 
-            /* 1. Otimização do Card de Ganho Diário */
+            /* Tabela de Histórico - Ajuste Final para caber na tela */
+            .table-container { 
+                padding: 10px; /* Reduz padding do container */
+                overflow-x: hidden; /* Remove a rolagem como padrão */
+            }
+            .table-container table {
+                table-layout: fixed; /* Fixa as larguras para caber 100% */
+                width: 100%;
+            }
+            
+            /* Nova distribuição de largura das colunas para caber (Total: 100%) */
+            .table-container table thead th:nth-child(1) { width: 22%; padding-left: 10px;} /* Data */
+            .table-container table thead th:nth-child(2) { width: 30%; } /* Ganho do Dia */
+            .table-container table thead th:nth-child(3) { width: 30%; } /* Acumulado */
+            .table-container table thead th:nth-child(4) { 
+                width: 18%; 
+                text-align: right; /* Alinha o % para direita para salvar espaço */
+                padding-right: 10px;
+                white-space: normal; /* Permite quebra para o título '%' */
+            }
+
+            /* Ganho Diário - Formatação Limpa (Nome, USD, BRL) */
             .card--daily-gain ul li {
-                /* Layout forçado: Nome (esquerda), USD/BRL (direita, na mesma linha) */
                 display: flex;
                 justify-content: space-between;
-                align-items: center;
-                grid-template-columns: none; /* Desativa o grid no mobile */
-                gap: 5px;
-                padding: 10px 0;
+                align-items: flex-end; /* Alinha o texto do robô com os valores */
+                padding: 8px 0;
+                font-size: 0.95rem;
             }
             .card--daily-gain ul li span.label {
-                flex-grow: 1; /* Permite que o label ocupe o espaço */
+                flex-grow: 1;
                 text-align: left;
             }
             .card--daily-gain ul li span.value-usd,
             .card--daily-gain ul li span.value-brl {
-                /* Garante que USD e BRL fiquem LADO A LADO na direita */
+                 /* Valores lado a lado na direita */
                 display: inline-block; 
-                text-align: right; 
-                line-height: 1.2;
-                margin-left: 10px; /* Espaço entre os valores e o label */
+                margin-left: 8px; /* Espaço entre os valores */
+                line-height: 1;
             }
-
-            .card--daily-gain ul li.total-row {
-                /* Mantém o layout flex, mas com espaçamento total */
-                justify-content: space-between; 
+             .card--daily-gain ul li.total-row {
+                 padding: 10px 10px;
+                 justify-content: space-between;
+                 align-items: center;
             }
-             .card--daily-gain ul li.total-row span.value-usd,
-            .card--daily-gain ul li.total-row span.value-brl {
-                 margin-left: 8px;
-            }
-
-            /* 2. Otimização da Tabela de Histórico */
-            .table-container { 
-                padding: 15px; 
-                overflow-x: auto; 
-                -webkit-overflow-scrolling: touch; 
-            }
-            table { 
-                /* Força uma largura mínima para a rolagem funcionar e a tabela não quebrar */
-                min-width: 480px; 
-            }
-            th, td { 
-                padding: 8px 10px; 
-                font-size: 0.85rem; 
-                /* Otimiza a largura das colunas do histórico para caber o máximo possível */
-                width: auto;
-            }
-            
-            /* Destaques (Pró Labore e Saldo) */
-            .card--highlight .metric-value { font-size: 3rem; }
-            .card--highlight .metric-sub-value { font-size: 1.6rem; }
         }
 
     </style>
@@ -561,10 +565,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Data</th>
-                        <th>Ganho do Dia ($)</th>
-                        <th>Acumulado ($)</th>
-                        <th>Ganho % (s/ Saldo Final)</th>
+                        <th style="width: 22%;">Data</th>
+                        <th style="width: 30%;">Ganho Dia ($)</th>
+                        <th style="width: 30%;">Acumulado ($)</th>
+                        <th style="width: 18%; text-align: right; padding-right: 10px;">%</th>
                     </tr>
                 </thead>
                 <tbody id="history-tbody">
@@ -892,13 +896,12 @@
                 }
 
                 // Formatadores locais para a tabela de histórico
-                const formatUSD = (value) => {
-                    return (parseFloat(value) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
-                };
                 const formatPerc = (value) => {
-                    return (parseFloat(value) || 0).toFixed(2) + '%';
+                    // Mantém o símbolo de % no final
+                    return (parseFloat(value) || 0).toFixed(2);
                 };
                 const formatUSDValue = (value) => {
+                    // Formato US$ 0,00 para economizar espaço
                     return 'US$ ' + (parseFloat(value) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 };
 
@@ -937,7 +940,7 @@
                             <td>${item.data}</td>
                             <td class="positive">${formatUSDValue(item.ganho_dia)}</td>
                             <td style="font-weight: bold;">${formatUSDValue(item.ganho_acumulado)}</td>
-                            <td class="positive">${formatPerc(item.percentual_dia)}</td>
+                            <td class="positive" style="text-align: right; padding-right: 10px;">${formatPerc(item.percentual_dia)}%</td>
                         </tr>
                     `;
                     tbody.innerHTML += row;
