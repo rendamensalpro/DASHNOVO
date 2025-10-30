@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -509,6 +508,7 @@
                     </tbody>
             </table>
         </div>
+        
         <h2 class="section-title">Projeto e Estratégia JFC 2025</h2>
         <div class="dashboard-grid">
             <div class="card" style="border-left-color: var(--green-color);">
@@ -696,7 +696,7 @@
                 for (let i = 1; i <= numMeses; i++) {
                     const rendimento = saldo * rendimentoPerc;
                     const reinvestido = rendimento * reinvestPerc;
-                    const saqueRobo = rendimento * (1 - reinvest Perc);
+                    const saqueRobo = rendimento * (1 - reinvestPerc);
                     const salarioSocio = numSocios > 0 ? (saqueRobo / numSocios) : 0;
                     const saldoFinal = saldo + reinvestido;
                     const formattedDate = currentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -724,18 +724,27 @@
         }
 
         /**
-         * Converte o texto de um CSV (chave,valor) para um objeto JavaScript.
+         * CORREÇÃO ROBUSTA: Converte o texto de um CSV (chave,valor) para um objeto JavaScript.
+         * Lida melhor com diferentes quebras de linha (CRLF, LF) e espaços.
          */
         function parseCSV(text) {
             const data = {};
-            const lines = text.split('\n').filter(line => line.trim() !== '' && line.includes(','));
+            // Usa regex para lidar com \r\n (Windows) e \n (Linux/Mac) e filtra linhas vazias
+            const lines = text.split(/\r?\n/).filter(line => line.trim() !== '' && line.includes(','));
             
+            if (lines.length === 0) {
+                 console.warn("CSV lido, mas está vazio ou formatado incorretamente.");
+                 return {};
+            }
+
             lines.forEach(line => {
-                const parts = line.split(',');
-                if (parts.length >= 2) { 
-                    const key = parts[0].trim();
-                    const value = parts.slice(1).join(',').trim();
+                // Divide apenas no primeiro separador ',' para suportar vírgulas no valor se houver aspas
+                const firstCommaIndex = line.indexOf(',');
+                if (firstCommaIndex > 0) {
+                    const key = line.substring(0, firstCommaIndex).trim();
+                    let value = line.substring(firstCommaIndex + 1).trim();
                     
+                    // Remove aspas duplas se existirem (ex: "3050.50")
                     const cleanedValue = value.startsWith('"') && value.endsWith('"') ? value.slice(1, -1) : value;
 
                     data[key] = cleanedValue;
@@ -749,18 +758,25 @@
             try {
                 const response = await fetch(`${dataUrl}?v=${new Date().getTime()}`);
                 if (!response.ok) {
-                    throw new Error(`Erro ao buscar dados: ${response.statusText}`);
+                    // Se a resposta falhar, lança um erro para o bloco catch
+                    throw new Error(`Erro HTTP: ${response.status} - Verifique se o arquivo data.csv existe e se o servidor está funcionando.`);
                 }
                 const csvText = await response.text();
                 const data = parseCSV(csvText);
 
+                if (Object.keys(data).length === 0) {
+                     console.error("O arquivo data.csv foi lido, mas não foram encontradas chaves/valores. Verifique o conteúdo do CSV (chave,valor).");
+                     // Não lançamos erro aqui, apenas alertamos no console e deixamos os valores em 0.
+                }
+
                 // --- 1. Lê os dados do CSV ---
-                const saldoTotal = parseFloat(data.saldo_total_roboforex) || 0;
-                const ganhoRendeMais = parseFloat(data.ganho_diario_rende_mais) || 0;
-                const ganhoInter = parseFloat(data.ganho_diario_inter) || 0;
-                const ganhoSlow = parseFloat(data.ganho_diario_slow) || 0;
-                const ganho10 = parseFloat(data.ganho_diario_10) || 0;
-                const ganhoCopia = parseFloat(data.ganho_diario_copia) || 0;
+                // Verifica se as chaves existem antes de tentar converter, evitando NaN
+                const saldoTotal = parseFloat(data.saldo_total_roboforex || 0) || 0;
+                const ganhoRendeMais = parseFloat(data.ganho_diario_rende_mais || 0) || 0;
+                const ganhoInter = parseFloat(data.ganho_diario_inter || 0) || 0;
+                const ganhoSlow = parseFloat(data.ganho_diario_slow || 0) || 0;
+                const ganho10 = parseFloat(data.ganho_diario_10 || 0) || 0;
+                const ganhoCopia = parseFloat(data.ganho_diario_copia || 0) || 0;
 
                 // --- 2. Calcula os valores derivados ---
                 const ganhoDiarioTotal = ganhoRendeMais + ganhoInter + ganhoSlow + ganho10 + ganhoCopia;
@@ -790,7 +806,8 @@
 
 
             } catch (error) {
-                console.error("Falha ao carregar dados locais (data.csv):", error);
+                console.error("Falha fatal ao carregar data.csv. Verifique o console para detalhes.", error);
+                alert(`ERRO: Falha ao carregar dados do data.csv. Causa: ${error.message}. Você está usando um servidor local?`);
             } finally {
                 updateCards();
             }
@@ -798,13 +815,13 @@
 
         
         // =============================================
-        //  FUNÇÃO PARA CARREGAR O HISTÓRICO (historico.csv) - CÁLCULOS AUTOMÁTICOS
+        //  FUNÇÃO PARA CARREGAR O HISTÓRICO (historico.csv)
         // =============================================
         async function fetchAndDisplayHistory() {
             try {
                 const response = await fetch(`${historyUrl}?v=${new Date().getTime()}`);
                 if (!response.ok) {
-                    throw new Error(`Erro ao buscar histórico: ${response.statusText}`);
+                    throw new Error(`Erro HTTP: ${response.status} ao carregar historico.csv.`);
                 }
                 const csvText = await response.text();
                 const tbody = document.getElementById('history-tbody');
@@ -812,9 +829,9 @@
                 
                 tbody.innerHTML = ''; 
 
-                const lines = csvText.split('\n').filter(line => line.trim() !== '');
+                const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
                 
-                // Remove o cabeçalho
+                // Remove o cabeçalho (esperado: data,ganho_dia,saldo_final_dia)
                 if (lines.length > 0) {
                     lines.shift(); 
                 }
@@ -827,7 +844,7 @@
                     return (parseFloat(value) || 0).toFixed(2) + '%';
                 };
 
-                // Mapeia os dados e garante que têm a estrutura correta: data, ganho_dia, saldo_final_dia
+                // Mapeia e filtra os dados (esperando 3 colunas)
                 const rawHistory = lines.map(line => line.split(',')).filter(values => values.length === 3);
 
                 let accumulatedGain = 0;
@@ -835,12 +852,13 @@
 
                 // Processa a história em ordem cronológica para calcular o acumulado
                 rawHistory.forEach(values => {
-                    const [data, ganho_dia_str, saldo_final_dia_str] = values;
+                    const [data, ganho_dia_str, saldo_final_dia_str] = values.map(v => v.trim());
                     const ganho_dia = parseFloat(ganho_dia_str) || 0;
                     const saldo_final_dia = parseFloat(saldo_final_dia_str) || 0;
 
                     accumulatedGain += ganho_dia;
 
+                    // O cálculo do percentual é feito com base no SALDO FINAL do dia
                     const percentual_dia = (saldo_final_dia > 0) ? (ganho_dia / saldo_final_dia) * 100 : 0;
                     
                     processedHistory.push({
@@ -868,7 +886,7 @@
                 });
 
             } catch (error) {
-                console.error("Falha ao carregar dados locais (historico.csv):", error);
+                console.error("Falha ao carregar historico.csv. Verifique o console para detalhes.", error);
             }
         }
 
