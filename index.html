@@ -241,7 +241,6 @@
         }
         
         .card--daily-gain ul li {
-            /* Layout padrão para desktop: 3 colunas */
             display: grid;
             grid-template-columns: 2fr 1fr 1fr; /* Nome, $, R$ */
             align-items: center;
@@ -319,7 +318,7 @@
             margin-top: 30px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
             border: 1px solid var(--primary-color);
-            overflow-x: auto; /* Garante que a rolagem esteja disponível como fallback, mas tentaremos evitar. */
+            overflow-x: auto;
         }
         
         .table-container-title {
@@ -333,7 +332,6 @@
             border-collapse: separate;
             border-spacing: 0;
             width: 100%;
-            /* min-width removido para forçar o ajuste */
         }
 
         th, td {
@@ -341,15 +339,8 @@
             text-align: left;
             border-bottom: 1px solid #ffffff1a;
             font-size: 0.95rem;
-            white-space: nowrap; /* Impede a quebra de linha nas células */
+            white-space: nowrap;
         }
-        
-        /* Otimização de largura de Colunas da Tabela (Desktop/Tablet) */
-        .table-container table thead th:nth-child(1) { width: 20%; } /* Data */
-        .table-container table thead th:nth-child(2) { width: 25%; } /* Ganho do Dia */
-        .table-container table thead th:nth-child(3) { width: 30%; } /* Acumulado */
-        .table-container table thead th:nth-child(4) { width: 25%; } /* Ganho % */
-
 
         thead th {
             background-color: #2a2a44;
@@ -377,41 +368,28 @@
         }
         
         /* --- OTIMIZAÇÃO MOBILE EXTREMA (Media Query) --- */
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
+             /* Esconde o modo Tabela para a Projeção Mensal */
+            #projection-table-wrapper { display: none; }
+             /* Mostra o modo Card para a Projeção Mensal */
+            #projection-card-wrapper { display: block; }
+
+            /* Otimizações gerais */
             body { padding: 10px; }
             .header h1 { font-size: 2rem; }
             .section-title { font-size: 1.6rem; margin: 40px 0 20px 0; }
             .card { padding: 15px; }
-            th, td { padding: 8px 5px; font-size: 0.8rem; } /* REDUÇÃO MÁXIMA DE ESPAÇAMENTO */
-
-            /* Tabela de Histórico - Ajuste Final para caber na tela */
-            .table-container { 
-                padding: 10px; /* Reduz padding do container */
-                overflow-x: hidden; /* Remove a rolagem como padrão */
-            }
-            .table-container table {
-                table-layout: fixed; /* Fixa as larguras para caber 100% */
-                width: 100%;
-            }
-            
-            /* Nova distribuição de largura das colunas para caber (Total: 100%) */
-            .table-container table thead th:nth-child(1) { width: 22%; padding-left: 10px;} /* Data */
-            .table-container table thead th:nth-child(2) { width: 30%; } /* Ganho do Dia */
-            .table-container table thead th:nth-child(3) { width: 30%; } /* Acumulado */
-            .table-container table thead th:nth-child(4) { 
-                width: 18%; 
-                text-align: right; /* Alinha o % para direita para salvar espaço */
-                padding-right: 10px;
-                white-space: normal; /* Permite quebra para o título '%' */
-            }
+            th, td { padding: 8px 5px; font-size: 0.9rem; }
+            .table-container { padding: 15px; }
 
             /* Ganho Diário - Formatação Limpa (Nome, USD, BRL) */
             .card--daily-gain ul li {
                 display: flex;
                 justify-content: space-between;
-                align-items: flex-end; /* Alinha o texto do robô com os valores */
+                align-items: center; 
                 padding: 8px 0;
                 font-size: 0.95rem;
+                grid-template-columns: none;
             }
             .card--daily-gain ul li span.label {
                 flex-grow: 1;
@@ -419,17 +397,90 @@
             }
             .card--daily-gain ul li span.value-usd,
             .card--daily-gain ul li span.value-brl {
-                 /* Valores lado a lado na direita */
                 display: inline-block; 
-                margin-left: 8px; /* Espaço entre os valores */
+                margin-left: 8px;
                 line-height: 1;
             }
-             .card--daily-gain ul li.total-row {
+            .card--daily-gain ul li.total-row {
                  padding: 10px 10px;
                  justify-content: space-between;
                  align-items: center;
             }
+
+            /* Tabela de Histórico - Ajuste Final para caber na tela */
+            .table-container table {
+                table-layout: fixed; /* Fixa as larguras para caber 100% */
+                width: 100%;
+            }
+            
+            /* Distribuição de largura das colunas para caber (Total: 100%) */
+            .table-container table thead th:nth-child(1) { width: 22%; padding-left: 5px;} /* Data */
+            .table-container table thead th:nth-child(2) { width: 30%; } /* Ganho do Dia */
+            .table-container table thead th:nth-child(3) { width: 30%; } /* Acumulado */
+            .table-container table thead th:nth-child(4) { 
+                width: 18%; 
+                text-align: right; 
+                padding-right: 5px;
+                white-space: normal;
+            }
         }
+        
+        /* --- ESTILOS DO NOVO LAYOUT CARD RESPONSIVO (Projeção) --- */
+        #projection-card-wrapper {
+             display: none; /* Escondido por padrão no desktop */
+        }
+
+        .projection-card {
+            background-color: var(--card-color);
+            border: 1px solid var(--primary-color);
+            border-left: 5px solid var(--blue-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .projection-card__header {
+            font-size: 1.3rem;
+            color: var(--blue-color);
+            border-bottom: 1px solid #ffffff1a;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .projection-card__item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.95rem;
+            border-bottom: 1px dashed #ffffff0d;
+        }
+
+        .projection-card__label {
+            color: #b0b0d0;
+            font-weight: 500;
+        }
+
+        .projection-card__value {
+            font-weight: bold;
+        }
+        
+        .projection-card__item:last-child {
+            font-size: 1.1rem;
+            padding-top: 10px;
+            color: var(--green-color) !important;
+            border-top: 2px solid var(--primary-color);
+            border-bottom: none;
+        }
+        
+        /* Cor de destaque para o Salário por Sócio */
+        .projection-card__item.salario-socio .projection-card__value {
+            color: var(--green-color);
+            font-size: 1.1rem;
+            text-shadow: 0 0 5px rgba(0, 255, 153, 0.4);
+        }
+
 
     </style>
 </head>
@@ -636,8 +687,8 @@
                 <input type="number" id="proj-socios" class="setting-input" value="3" step="1" onchange="generateProjectionTable()">
             </div>
         </div>
-
-        <div class="table-container">
+        
+        <div class="table-container" id="projection-table-wrapper">
             <h2 class="table-container-title">
                 <i class="fas fa-calendar-alt"></i>Projeção Mensal - Pró Labore JFC (36 Meses)
             </h2>
@@ -658,6 +709,15 @@
                     </tbody>
             </table>
         </div>
+        
+        <div class="table-container" id="projection-card-wrapper" style="display: none;">
+            <h2 class="table-container-title">
+                <i class="fas fa-calendar-alt"></i>Projeção Mensal (Modo Card)
+            </h2>
+             <div id="projection-cards-body">
+                </div>
+        </div>
+        
     </main>
 
     <script>
@@ -744,22 +804,33 @@
             });
         }
 
-        // --- FUNÇÃO PARA GERAR A TABELA DE PROJEÇÃO ---
+        // --- FUNÇÃO PARA GERAR A TABELA DE PROJEÇÃO (AGORA COM MODO CARD) ---
         function generateProjectionTable() {
             try {
                 const projectionBody = document.getElementById('projection-tbody');
-                if (!projectionBody) return;
+                const projectionCardsBody = document.getElementById('projection-cards-body');
+
+                if (!projectionBody || !projectionCardsBody) return;
+
                 projectionBody.innerHTML = '';
+                projectionCardsBody.innerHTML = ''; // Limpa o modo card
+
                 let saldoInicial = parseFloat(document.getElementById('proj-saldo-inicial').value) || 10000;
                 const rendimentoPerc = (parseFloat(document.getElementById('proj-rendimento').value) || 15) / 100;
                 const numSocios = parseInt(document.getElementById('proj-socios').value) || 3;
                 const numMeses = 36;
                 const reinvestPerc = 0.50;
-                document.getElementById('th-rendimento').textContent = `Rendimento (${(rendimentoPerc * 100).toFixed(0)}%)`;
-                document.getElementById('th-socios').textContent = `Salário p/ Sócio (${numSocios})`;
+                
+                const rendimentoLabel = `Rendimento (${(rendimentoPerc * 100).toFixed(0)}%)`;
+                const salarioSocioLabel = `Salário p/ Sócio (${numSocios})`;
+                
+                document.getElementById('th-rendimento').textContent = rendimentoLabel;
+                document.getElementById('th-socios').textContent = salarioSocioLabel;
+                
                 let currentDate = new Date('2025-11-15T12:00:00');
                 let saldo = saldoInicial;
                 const formatBRL = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2 });
+                
                 for (let i = 1; i <= numMeses; i++) {
                     const rendimento = saldo * rendimentoPerc;
                     const reinvestido = rendimento * reinvestPerc;
@@ -767,8 +838,43 @@
                     const salarioSocio = numSocios > 0 ? (saqueRobo / numSocios) : 0;
                     const saldoFinal = saldo + reinvestido;
                     const formattedDate = currentDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    
+                    // --- MODO TABELA (Desktop) ---
                     const row = `<tr><td>${i}</td><td>${formattedDate}</td><td>${formatBRL(saldo)}</td><td>${formatBRL(rendimento)}</td><td>${formatBRL(reinvestido)}</td><td>${formatBRL(saqueRobo)}</td><td class="positive">${formatBRL(salarioSocio)}</td><td style="font-weight: bold;">${formatBRL(saldoFinal)}</td></tr>`;
                     projectionBody.innerHTML += row;
+
+                    // --- MODO CARD (Mobile) ---
+                    const card = `
+                        <div class="projection-card">
+                            <div class="projection-card__header">Mês ${i} - ${formattedDate}</div>
+                            <div class="projection-card__item">
+                                <span class="projection-card__label">Saldo Inicial:</span>
+                                <span class="projection-card__value">${formatBRL(saldo)}</span>
+                            </div>
+                            <div class="projection-card__item">
+                                <span class="projection-card__label">${rendimentoLabel}:</span>
+                                <span class="projection-card__value">${formatBRL(rendimento)}</span>
+                            </div>
+                            <div class="projection-card__item">
+                                <span class="projection-card__label">Reinvestido (50%):</span>
+                                <span class="projection-card__value">${formatBRL(reinvestido)}</span>
+                            </div>
+                            <div class="projection-card__item">
+                                <span class="projection-card__label">Saque Robô (50%):</span>
+                                <span class="projection-card__value">${formatBRL(saqueRobo)}</span>
+                            </div>
+                            <div class="projection-card__item salario-socio">
+                                <span class="projection-card__label">${salarioSocioLabel}:</span>
+                                <span class="projection-card__value">${formatBRL(salarioSocio)}</span>
+                            </div>
+                            <div class="projection-card__item">
+                                <span class="projection-card__label">Saldo Final:</span>
+                                <span class="projection-card__value">${formatBRL(saldoFinal)}</span>
+                            </div>
+                        </div>
+                    `;
+                    projectionCardsBody.innerHTML += card;
+
                     saldo = saldoFinal;
                     currentDate.setMonth(currentDate.getMonth() + 1);
                 }
