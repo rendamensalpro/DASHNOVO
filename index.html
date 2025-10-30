@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -242,6 +243,7 @@
         }
         
         .card--daily-gain ul li {
+            /* Layout padrão para desktop: 3 colunas */
             display: grid;
             grid-template-columns: 2fr 1fr 1fr; /* Nome, $, R$ */
             align-items: center;
@@ -321,12 +323,14 @@
         table {
             border-collapse: separate; /* Permite o border-radius na thead */
             border-spacing: 0;
+            width: 100%; /* Garantir 100% */
         }
 
         th, td {
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #ffffff1a;
+            font-size: 0.95rem; /* Fonte um pouco menor nas células */
         }
 
         thead th {
@@ -354,15 +358,78 @@
             font-weight: 600;
         }
         
-        /* --- MOBILE OPTIMIZATION --- */
-        @media (max-width: 768px) {
-            body { padding: 15px; }
-            .header h1 { font-size: 2.2rem; }
-            .dashboard-grid { grid-template-columns: 1fr; }
+        /* --- OTIMIZAÇÃO MOBILE EXTREMA (Media Query) --- */
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .header h1 { font-size: 2rem; }
+            .section-title { font-size: 1.6rem; margin: 40px 0 20px 0; }
+            .card { padding: 15px; }
+
+            /* 1. Otimização dos Cards de Apuração Geral */
+            .metric-value { font-size: 2.2rem; }
+            .metric-sub-value { font-size: 1.1rem; }
+            .card--highlight .metric-value { font-size: 3rem; }
+            .card--highlight .metric-sub-value { font-size: 1.6rem; }
+
+            /* 2. Otimização do Card de Ganho Diário */
+            .card--daily-gain ul li {
+                /* Força o layout em 2 linhas para evitar apertar demais */
+                grid-template-columns: 1.5fr 1fr; /* Nome, $ + R$ agrupados em uma coluna */
+                gap: 5px;
+                padding: 10px 0;
+                font-size: 1rem;
+            }
+            .card--daily-gain ul li span.value-usd,
+            .card--daily-gain ul li span.value-brl {
+                /* Fazem parte da mesma coluna para ficarem juntos */
+                display: block; 
+                text-align: right; 
+                line-height: 1.2;
+            }
+            .card--daily-gain ul li span.value-usd { margin-bottom: 2px; }
+
+            .card--daily-gain ul li.total-row {
+                /* A linha total volta a 2 colunas para o nome e o total BRL/USD */
+                grid-template-columns: 1fr auto; 
+                padding: 10px 10px;
+            }
+            .card--daily-gain ul li.total-row span.label {
+                 text-align: left;
+            }
+            .card--daily-gain ul li.total-row span.value-usd,
+            .card--daily-gain ul li.total-row span.value-brl {
+                 display: inline-block; /* Alinha o USD e o BRL lado a lado na linha total */
+                 margin-left: 8px;
+                 font-size: 1.1rem;
+            }
+
+            /* 3. Otimização da Tabela de Histórico */
+            .table-container { 
+                padding: 15px; 
+                /* Permite a rolagem horizontal caso as colunas não caibam */
+                overflow-x: auto; 
+                -webkit-overflow-scrolling: touch; 
+            }
+            table { 
+                /* Garante que o conteúdo não force o redimensionamento */
+                min-width: 500px; 
+            }
+            th, td { 
+                padding: 8px 10px; 
+                font-size: 0.85rem; 
+            }
             
-            .card--highlight .metric-value { font-size: 3.2rem; }
-            .card--highlight .metric-sub-value { font-size: 1.8rem; } 
+            /* Ajusta a largura das colunas do histórico para economizar espaço */
+            .table-container table colgroup {
+                display: none; /* Remove colgroup se existir, usando a regra min-width */
+            }
+            .table-container table thead th:nth-child(1) { width: 25%; } /* Data */
+            .table-container table thead th:nth-child(2) { width: 25%; } /* Ganho do Dia */
+            .table-container table thead th:nth-child(3) { width: 30%; } /* Acumulado */
+            .table-container table thead th:nth-child(4) { width: 20%; } /* Ganho % */
+
         }
+        /* Fim da Otimização Mobile */
 
     </style>
 </head>
@@ -725,11 +792,9 @@
 
         /**
          * CORREÇÃO ROBUSTA: Converte o texto de um CSV (chave,valor) para um objeto JavaScript.
-         * Lida melhor com diferentes quebras de linha (CRLF, LF) e espaços.
          */
         function parseCSV(text) {
             const data = {};
-            // Usa regex para lidar com \r\n (Windows) e \n (Linux/Mac) e filtra linhas vazias
             const lines = text.split(/\r?\n/).filter(line => line.trim() !== '' && line.includes(','));
             
             if (lines.length === 0) {
@@ -738,13 +803,11 @@
             }
 
             lines.forEach(line => {
-                // Divide apenas no primeiro separador ',' para suportar vírgulas no valor se houver aspas
                 const firstCommaIndex = line.indexOf(',');
                 if (firstCommaIndex > 0) {
                     const key = line.substring(0, firstCommaIndex).trim();
                     let value = line.substring(firstCommaIndex + 1).trim();
                     
-                    // Remove aspas duplas se existirem (ex: "3050.50")
                     const cleanedValue = value.startsWith('"') && value.endsWith('"') ? value.slice(1, -1) : value;
 
                     data[key] = cleanedValue;
@@ -758,7 +821,6 @@
             try {
                 const response = await fetch(`${dataUrl}?v=${new Date().getTime()}`);
                 if (!response.ok) {
-                    // Se a resposta falhar, lança um erro para o bloco catch
                     throw new Error(`Erro HTTP: ${response.status} - Verifique se o arquivo data.csv existe e se o servidor está funcionando.`);
                 }
                 const csvText = await response.text();
@@ -766,11 +828,9 @@
 
                 if (Object.keys(data).length === 0) {
                      console.error("O arquivo data.csv foi lido, mas não foram encontradas chaves/valores. Verifique o conteúdo do CSV (chave,valor).");
-                     // Não lançamos erro aqui, apenas alertamos no console e deixamos os valores em 0.
                 }
 
                 // --- 1. Lê os dados do CSV ---
-                // Verifica se as chaves existem antes de tentar converter, evitando NaN
                 const saldoTotal = parseFloat(data.saldo_total_roboforex || 0) || 0;
                 const ganhoRendeMais = parseFloat(data.ganho_diario_rende_mais || 0) || 0;
                 const ganhoInter = parseFloat(data.ganho_diario_inter || 0) || 0;
@@ -807,7 +867,7 @@
 
             } catch (error) {
                 console.error("Falha fatal ao carregar data.csv. Verifique o console para detalhes.", error);
-                alert(`ERRO: Falha ao carregar dados do data.csv. Causa: ${error.message}. Você está usando um servidor local?`);
+                // Não mostra alert para não ser intrusivo no mobile
             } finally {
                 updateCards();
             }
